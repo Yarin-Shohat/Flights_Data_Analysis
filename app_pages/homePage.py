@@ -160,10 +160,18 @@ st.write("---")
 st.write("## Data Analysis")
 st.write("In this section, we will analyze the flights data.")
 
+######### Flights Before and After 7/10/2023 #########
 st.write("### Flights Before and After 7/10/2023")
 
+# Sum flights before and after October 7, 2023
 df_grouped = data[["before_7_10_2023", "after_7_10_2023"]].sum().reset_index()
 df_grouped.columns = ["Period", "Number of Flights"]
+
+# Change period labels to "Before Attack" and "After Attack"
+df_grouped["Period"] = df_grouped["Period"].map({
+    "before_7_10_2023": "Before Attack", 
+    "after_7_10_2023": "After Attack"
+})
 
 # Create a bar chart using Plotly
 fig = px.bar(
@@ -186,6 +194,7 @@ st.plotly_chart(fig, use_container_width=False)
 
 st.write("The chart above shows the number of flights before and after the terror attack on 7/10/2023. As expected, there is a significant drop in the number of flights after the attack.")
 
+######### Flights Per Month #########
 st.write("### Flights Per Month")
 
 # Filter out October 2024 data
@@ -233,9 +242,149 @@ st.write("""
          """)
 
 
+######### The difference between the flights before and after #########
 st.write("### The difference between the flights before and after 7/10/2023")
+st.write("Now we will see the difference between the flights before and after the terror attack on 7/10/2023.")
 # Classify flights into before/after October 7
 event_date = pd.to_datetime("2023-10-07").date()
 data['departure_date'] = data['departure_time'].dt.date
 data['period'] = data['departure_date'].apply(lambda x: 'Before' if x < event_date else 'After')
 
+######### Hourly Departure Time Distribution #########
+# Count flights per hour before and after
+hourly_flights = data.groupby(['departure_time_hour', 'period']).size().unstack().fillna(0).reset_index()
+
+# Melt the dataframe for Plotly
+hourly_flights_melted = hourly_flights.melt(id_vars='departure_time_hour', value_vars=['Before', 'After'], var_name='Period', value_name='Number of Flights')
+
+# Create a bar chart using Plotly
+fig = px.bar(
+    hourly_flights_melted,
+    x='departure_time_hour',
+    y='Number of Flights',
+    color='Period',
+    barmode='group',
+    title="Hourly Departure Time Distribution (Before vs. After Oct 7)",
+    labels={'departure_time_hour': 'Hour of Day', 'Number of Flights': 'Number of Flights'},
+    color_discrete_sequence=["#3498db", "#e74c3c"]  # Blue and red
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Hour of Day",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=0,
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(24)),  # Show all 24 hours (0-23)
+        ticktext=[str(h) for h in range(24)]  # Label each hour
+    ),
+    width=800,
+    height=400
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("The chart above shows the distribution of flights by hour of the day before and after the terror attack on 7/10/2023. We can see that there isn't a change in the distribution of the flight hours before and after the attack.")
+
+######### Daily Departure Time Distribution #########
+# Count flights per hour before and after
+daily_flights = data.groupby(['departure_time_day', 'period']).size().unstack().fillna(0).reset_index()
+
+# Melt the dataframe for Plotly
+daily_flights_melted = daily_flights.melt(id_vars='departure_time_day', value_vars=['Before', 'After'], var_name='Period', value_name='Number of Flights')
+
+# Create a bar chart using Plotly
+fig = px.bar(
+    daily_flights_melted,
+    x='departure_time_day',
+    y='Number of Flights',
+    color='Period',
+    barmode='group',
+    title="Daily Departure Time Distribution (Before vs. After Oct 7)",
+    labels={'departure_time_day': 'Day in Month', 'Number of Flights': 'Number of Flights'},
+    color_discrete_sequence=["#3498db", "#e74c3c"]  # Blue and red
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Day in Month",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=0,
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(32)),  # Show all 31 days (1-31)
+        ticktext=[str(h) for h in range(32)]  # Label each day
+    ),
+    width=800,
+    height=400
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("The chart above shows the distribution of flights by Day in Month before and after the terror attack on 7/10/2023. We can see that there isn't a change in the distribution of the day of the flights before and after the attack, there is a uniform distribution.")
+
+######### Top 15 Country Destinations Before Attack #########
+st.write("### Top 15 Country Destinations Before Attack")
+
+# Filter data for the period before the attack
+before_attack_data = data[data['period'] == 'Before']
+
+# Filter data for before and after periods
+before_attack_data = data[data['period'] == 'Before']
+after_attack_data = data[data['period'] == 'After']
+
+# Count flights by country for both periods
+countries_before = before_attack_data['country_name'].value_counts().reset_index()
+countries_before.columns = ['country_name', 'count']
+countries_before['period'] = 'Before'
+
+countries_after = after_attack_data['country_name'].value_counts().reset_index()
+countries_after.columns = ['country_name', 'count']
+countries_after['period'] = 'After'
+
+# Combine data
+combined_countries = pd.concat([countries_before, countries_after])
+
+# Get top 15 countries by total flights across both periods
+top_countries = combined_countries.groupby('country_name')['count'].sum().nlargest(15).index.tolist()
+
+# Filter to only include top countries
+filtered_combined = combined_countries[combined_countries['country_name'].isin(top_countries)]
+
+# Create a grouped bar chart
+fig = px.bar(
+    filtered_combined,
+    x='country_name',
+    y='count',
+    color='period',
+    title="Top 15 Country Destinations: Before vs. After Oct 7, 2023",
+    labels={"country_name": "Country", "count": "Number of Flights", "period": "Period"},
+    color_discrete_sequence=["#3498db", "#e74c3c"],  # Blue and red
+    barmode='group'
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Country",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=45,
+    width=800,
+    height=500
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("We can see that all the countries in the top 15 destinations have a decrease in the number of flights after the terror attack on 7/10/2023, but specifically, the number of flights to Turkey decreased significantly. Every other country decrease in more than 50%, Turkey decreased in 95%.")
+
+# Map
+
+
+# Most difference in country destinations
+
+
+st.write("---")
+st.write(data)
