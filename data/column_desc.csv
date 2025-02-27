@@ -1,0 +1,20 @@
+column_name,description,name
+callsign,Characters used to identify an aircraft in air-ground communications,Callsign
+departure_airport,The ICAO (International Civil Aviation Organization) code of the airport the flight departed from (all flights departed from IL - value: LLBG),Departure Airport
+arrival_airport,The ICAO code of the airport at which the flight arrived,Arrival Airport
+departure_time,The date and time of the flights departure,Departure Time
+arrival_time,The date and time of the flight’s arrival,Arrival Time
+after_7_10_2023,A binary indicator (1 or 0) indicating whether the flight occurred after October 7 2023,After 07.10.2023
+before_7_10_2023,A binary indicator (1 or 0) indicating whether the flight occurred before October 7 2023,Before 07.10.2023
+departure_time_month,The month of the flights departure,Departure Month
+departure_time_day,The day of the month of the flights departure,Departure Day
+departure_time_hour,The hour of the day of the flights departure (24-hour format),Departure Hour
+departure_time_minute,The minute of the hour of the flights departure,Departure Minute
+departure_time_day_name,The name of the day of the week of the flights departure,Departure Day Name
+airportName,The full name of the arrival airport,Airport Name
+latitude_deg,The latitude coordinate of the arrival airport,Latitude
+longitude_deg,The longitude coordinate of the arrival airport,Longitude
+continent,The continent where the arrival airport is located,Continent
+country_code,The country code of the arrival airport,Country Code
+municipality,The municipality or city where the arrival airport is located,Municipality
+country_name,The full name of the country where the arrival airport is located,Country Name
