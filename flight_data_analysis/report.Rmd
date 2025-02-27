@@ -1,0 +1,219 @@
+---
+title: "Flights"
+author: '211987987'
+date: "2024-10-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Flights Data Anlysis
+
+We will analyze flight data from Israel to other countries for the year preceding and the year following October 7, 2023, the date of the terror attack on Israel. We aim to assess the impact of this event on various aspects of life in Israel, including potential effects on outbound flights.
+
+```{r load}
+data = read.csv("data.csv")
+```
+
+```{r}
+dim(data)
+```
+
+```{r}
+names(data)
+```
+
+
+```{r}
+summary(data)
+```
+
+
+```{r}
+str(data)
+```
+
+
+```{r}
+# converting to datetime object 
+data[['departure_time']] <- strptime(data[['departure_time']], 
+                                 format = "%Y-%m-%d %H:%M:%S") 
+data[['arrival_time']] <- strptime(data[['departure_time']], 
+                                 format = "%Y-%m-%d %H:%M:%S") 
+```
+
+```{r}
+str(data)
+```
+
+## Cols Anlysis
+
+<u>**1. callsign (Type chr):**</u> Characters used to identify an aircraft in air-ground communications
+
+```{r}
+summary(data$callsign)
+cat(sprintf("NULL values: %d", sum(is.na(data$callsign))), "\n",
+  sprintf("Unique values: %d", length(unique(data$callsign))))
+```
+
+
+<u>**2. departure_airport (Type chr):**</u> The ICAO (International Civil Aviation Organization) code of the airport the flight departed from (all flights departed from IL - value: LLBG).
+
+```{r}
+summary(data$departure_airport)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_airport))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_airport))))
+```
+
+<u>**3. arrival_airport (Type chr):**</u> The ICAO code of the airport at which the flight arrived.
+
+```{r}
+summary(data$arrival_airport)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$arrival_airport))), "\n",
+  sprintf("Unique values: %d", length(unique(data$arrival_airport))))
+```
+
+<u>**4. departure_time (Type POSIXlt):**</u> The date and time of the flight's departure.
+
+```{r}
+summary(data$departure_time)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time))))
+```
+
+<u>**5. arrival_time (Type POSIXlt):**</u> The date and time of the flight's arrival.
+
+```{r}
+summary(data$arrival_time)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$arrival_time))), "\n",
+  sprintf("Unique values: %d", length(unique(data$arrival_time))))
+```
+
+<u>**6. after_7_10_2023 (Type int):**</u> A binary indicator (1 or 0) indicating whether the flight occurred after October 7, 2023.
+
+```{r}
+summary(data$after_7_10_2023)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$after_7_10_2023))), "\n",
+  sprintf("Unique values: %d", length(unique(data$after_7_10_2023))))
+```
+
+<u>**7. before_7_10_2023 (Type int):**</u> A binary indicator (1 or 0) indicating whether the flight occurred before October 7, 2023.
+```{r}
+summary(data$before_7_10_2023)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$before_7_10_2023))), "\n",
+  sprintf("Unique values: %d", length(unique(data$before_7_10_2023))))
+```
+
+<u>**8. departure_time_month (Type int):**</u> The month of the flight's departure.
+```{r}
+summary(data$departure_time_month)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_month))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_month))))
+```
+
+<u>**9. departure_time_day (Type int):**</u> The day of the month of the flight's departure.
+```{r}
+summary(data$departure_time_day)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_day))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_day))))
+```
+
+<u>**10. departure_time_hour (Type int):**</u> The hour of the day of the flight's departure (24-hour format).
+```{r}
+summary(data$departure_time_hour)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_hour))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_hour))))
+```
+
+<u>**11. departure_time_minute (Type int):**</u> The minute of the hour of the flight's departure.
+```{r}
+summary(data$departure_time_minute)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_minute))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_minute))))
+```
+
+<u>**12. departure_time_day_name (Type chr):**</u> The name of the day of the week of the flight's departure.
+```{r}
+summary(data$departure_time_day_name)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_day_name))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_day_name))))
+```
+
+<u>**13. departure_time_day_of_week (Type int):**</u> The numerical representation of the day of the week of the flight's departure.
+```{r}
+summary(data$departure_time_day_of_week)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$departure_time_day_of_week))), "\n",
+  sprintf("Unique values: %d", length(unique(data$departure_time_day_of_week))))
+```
+
+<u>**14. airportName (Type chr):**</u> The full name of the arrival airport.
+```{r}
+summary(data$airportName)
+cat(sprintf("NULL values: %d", sum(is.na(data$airportName))), "\n",
+  sprintf("Unique values: %d", length(unique(data$airportName))))
+```
+
+<u>**15. latitude_deg (Type num):**</u> The latitude coordinate of the arrival airport.
+```{r}
+summary(data$latitude_deg)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$latitude_deg))), "\n",
+  sprintf("Unique values: %d", length(unique(data$latitude_deg))))
+```
+
+<u>**16. longitude_deg (Type num):**</u> The longitude coordinate of the arrival airport.
+```{r}
+summary(data$longitude_deg)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$longitude_deg))), "\n",
+  sprintf("Unique values: %d", length(unique(data$longitude_deg))))
+```
+
+<u>**17. continent (Type chr):**</u> The continent where the arrival airport is located.
+```{r}
+summary(data$continent)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$continent))), "\n",
+  sprintf("Unique values: %d", length(unique(data$continent))))
+```
+
+<u>**18. country_name (Type chr):**</u> The country code of the arrival airport.
+```{r}
+summary(data$country_name)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$country_name))), "\n",
+  sprintf("Unique values: %d", length(unique(data$country_name))))
+```
+
+<u>**19. municipality (Type chr):**</u> The municipality or city where the arrival airport is located.
+```{r}
+summary(data$municipality)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$municipality))), "\n",
+  sprintf("Unique values: %d", length(unique(data$municipality))))
+```
+
+
+<u>**18. country_name (Type chr):**</u> The full name of the country where the arrival airport is located.
+
+```{r}
+summary(data$country_name)
+
+cat(sprintf("NULL values: %d", sum(is.na(data$country_name))), "\n",
+  sprintf("Unique values: %d", length(unique(data$country_name))))
+```
