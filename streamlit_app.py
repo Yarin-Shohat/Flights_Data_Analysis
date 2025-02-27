@@ -1,6 +1,12 @@
 import streamlit as st
+from st_pages import add_page_title, get_nav_from_toml
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+
+# Set the title and favicon that appear in the Browser's tab bar.
+st.set_page_config(layout="wide")
+
+nav = get_nav_from_toml("pages.toml")
+
+pg = st.navigation(nav)
+
+pg.run()
