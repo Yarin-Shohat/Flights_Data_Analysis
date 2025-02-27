@@ -11,6 +11,7 @@ def get_data():
     data = pd.read_csv("/workspaces/Flights_Data_Analysis/data/data.csv")
     # Drop the 'departure_time_day_of_week' column
     data = data.drop(columns=['departure_time_day_of_week'])
+    data['departure_time'] = pd.to_datetime(data['departure_time'])
     return data
 
 @st.cache_data
@@ -97,10 +98,10 @@ st.write("Now we will see the distribution of the data.")
 
 # ['departure_time_month', 'departure_time_day', 'departure_time_hour','departure_time_minute', 'departure_time_day_name', 'airportName', 'continent', 'municipality', 'country_name']
 all_cols = ['departure_time_month', 'departure_time_day', 'departure_time_hour','departure_time_minute', 'departure_time_day_name', 'airportName', 'continent', 'municipality', 'country_name']
-
 limit_cols =  ['airportName', 'municipality', 'country_name']
+
 # Data Distribution
-st.write("## Data Distribution")
+st.write("### Data Distribution")
 st.write("The following chart shows the distribution of the data.")
 
 st.write("You can select a column from the dropdown menu to see its distribution.")
@@ -136,11 +137,11 @@ if pd.api.types.is_numeric_dtype(data[selected_column]):
     )
     
     # Set the gap between bars
-    fig.update_layout(bargap=0.2)  # Adjust the value as needed (0.2 means 20% gap between bars)
+    fig.update_layout(bargap=0.2)  # 0.2 means 20% gap between bars
 
     st.plotly_chart(fig, use_container_width=True)
 else:
-    # For categorical data, show top 10 values
+    # For categorical data, show top 15 values
     value_counts = data[selected_column].value_counts().head(15)
     fig = px.bar(
         x=value_counts.index,
@@ -157,5 +158,84 @@ st.write("---")
 
 # Data Analysis
 st.write("## Data Analysis")
-st.write("In this section, we will analyze the data to gain insights from the flights data.")
+st.write("In this section, we will analyze the flights data.")
+
+st.write("### Flights Before and After 7/10/2023")
+
+df_grouped = data[["before_7_10_2023", "after_7_10_2023"]].sum().reset_index()
+df_grouped.columns = ["Period", "Number of Flights"]
+
+# Create a bar chart using Plotly
+fig = px.bar(
+    df_grouped,
+    x="Period",
+    y="Number of Flights",
+    color="Period",
+    color_discrete_sequence=["#3498db", "#e74c3c"])  # Blue and red
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=0
+)
+
+# Display the chart in Streamlit
+fig.update_layout(width=600)  # Set a specific width in pixels
+st.plotly_chart(fig, use_container_width=False)
+
+st.write("The chart above shows the number of flights before and after the terror attack on 7/10/2023. As expected, there is a significant drop in the number of flights after the attack.")
+
+st.write("### Flights Per Month")
+
+# Filter out October 2024 data
+filtered_data = data[data["departure_time"] < pd.Timestamp('2024-10-01')]
+flights_per_month = filtered_data.groupby(filtered_data["departure_time"].dt.to_period("M")).size().reset_index(name='Number of Flights')
+flights_per_month['departure_time'] = flights_per_month['departure_time'].dt.to_timestamp()
+
+# Calculate percent change for tooltip comparison
+flights_per_month['pct_change'] = flights_per_month['Number of Flights'].pct_change() * 100
+
+# Create a line chart using Plotly Express with custom hover info
+fig = px.line(
+    flights_per_month,
+    x='departure_time',
+    y='Number of Flights',
+    markers=True,
+    hover_data={
+        'departure_time': False,  # Hide default date format
+        'Number of Flights': ':.0f',  # Format with no decimal places
+        'pct_change': ':.1f'  # Format with 1 decimal place
+    }
+)
+
+# Customize hover template
+fig.update_traces(
+    hovertemplate='<b>%{x|%b %Y}</b><br>Flights: %{y:,.0f}<br>Change: %{customdata[0]:.1f}%<extra></extra>'
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Month",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=45,
+    width=800,
+    height=400
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("""
+         The chart above shows the number of flights per month from October 2022 to September 2024. There is a clear downward trend in the number of flights, with a significant drop in October 2023 due to the terror attack.\n
+         We can see that after the November 2023, the number of flights started to increase again, slowly, but increase between 1-20%.\n
+         In the year after the October 2023, the number of flights increased in every month except in August, in this month occurred [August 2024 Israel–Lebanon strikes](https://en.wikipedia.org/wiki/August_2024_Israel%E2%80%93Lebanon_strikes) so this is maybe the reason for the decrease in the number of flights.
+         """)
+
+
+st.write("### The difference between the flights before and after 7/10/2023")
+# Classify flights into before/after October 7
+event_date = pd.to_datetime("2023-10-07").date()
+data['departure_date'] = data['departure_time'].dt.date
+data['period'] = data['departure_date'].apply(lambda x: 'Before' if x < event_date else 'After')
 
