@@ -25,7 +25,7 @@ def get_columns_desc():
 st.title("✈️ Flights Data Analysis")
 st.write(
     """
-    This is my project about flights from Israel to the world. The flights is from October 2022 to October 2024 and this is only flights from Israel to other destinations.\n
+    This is my project about flights from Israel. The flights is from October 2022 to October 2024 and this is only flights departing from Israel.\n
     On October 7, 2023, a terror attack in Israel led to the cancellation of all flights, significantly impacting air travel in the region. This project will explore these effects.\n
     The destinations are the local destinations to which the current flight flew. If there was a connection, then the destination is not the final destination but the destination of the first connection. We will try to make the best of this data and see what happened in the world of flights in Israel in the year after October 7th compared to the year before, and in general we will look at the world of flights from Israel.\n
     The data, sourced from https://opensky-network.org/ via API requests, has been pre-processed by me, with all relevant code available in the repository.\n
@@ -192,17 +192,25 @@ fig = px.bar(
     color_discrete_sequence=["#3498db", "#e74c3c"])  # Blue and red
 
 # Update layout for better visualization
+# Add text labels on top of each bar
+fig.update_traces(
+    texttemplate="%{y:,}",  # Format with commas for thousands
+    textposition="outside",
+    textfont=dict(size=14)
+)
+
 fig.update_layout(
     xaxis_title="",
+    title="Number of Flights Before and After 7/10/2023",
     yaxis_title="Number of Flights",
     xaxis_tickangle=0,
     legend=dict(
-    orientation="v",
-    yanchor="top",
-    y=0.99,
-    xanchor="right",
-    x=0.99
-)
+        orientation="v",
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99
+    )
 )
 
 # Display the chart in Streamlit
