@@ -332,8 +332,53 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.write("The chart above shows the distribution of flights by Day in Month before and after the terror attack on 7/10/2023. We can see that there isn't a change in the distribution of the day of the flights before and after the attack, there is a uniform distribution.")
 
-######### Top 15 Country Destinations Before Attack #########
-st.write("### Top 15 Country Destinations Before Attack")
+######### Continent Distribution #########
+# Count flights per continent before and after
+continent_flights = data.groupby(['continent', 'period']).size().unstack().fillna(0).reset_index()
+
+# Melt the dataframe for Plotly
+continent_flights_melted = continent_flights.melt(id_vars='continent', value_vars=['Before', 'After'], var_name='Period', value_name='Number of Flights')
+
+col1, col2 = st.columns([1,5])
+
+with col1:
+    # Add a toggle for log scale
+    st.write("<br><br><br><br><br><br><br>", unsafe_allow_html=True)
+    log_scale = st.checkbox("Use Log Scale for Y-axis", value=False)
+
+with col2:
+    # Create a bar chart using Plotly
+    fig = px.bar(
+        continent_flights_melted,
+        x='continent',
+        y='Number of Flights',
+        color='Period',
+        barmode='group',
+        title="Flight Changes by Continent (Before vs. After Oct 7)",
+        labels={'continent': 'Continent', 'Number of Flights': 'Number of Flights'},
+        color_discrete_sequence=["#3498db", "#e74c3c"],  # Blue and red
+        log_y=log_scale  # Apply log scale based on checkbox
+    )
+
+    # Update layout for better visualization
+    fig.update_layout(
+        xaxis_title="Continent",
+        yaxis_title=f"Number of Flights{' (Log Scale)' if log_scale else ''}",
+        xaxis_tickangle=45,
+        width=800,
+        height=400
+    )
+
+    # Display the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+st.write("""
+         The chart above shows the number of flights by continent before and after the terror attack on 7/10/2023. The number of flights can see in regular scale or log scale for better visualization of smaller values. We can see the changes in the number of flights for each continent.\n
+        We can see that every continent has decreased in about 60-70% in the number of flights after the attack, except for Europe, which decreased in about 58% this is the lowest decrease.
+         """)
+
+######### Top 15 Destinations Before Attack #########
+st.write("### Top 15 Destinations Before Attack")
 
 # Filter data for the period before the attack
 before_attack_data = data[data['period'] == 'Before']
@@ -342,6 +387,8 @@ before_attack_data = data[data['period'] == 'Before']
 before_attack_data = data[data['period'] == 'Before']
 after_attack_data = data[data['period'] == 'After']
 
+
+######### Top 15 Country Destinations Before Attack #########
 # Count flights by country for both periods
 countries_before = before_attack_data['country_name'].value_counts().reset_index()
 countries_before.columns = ['country_name', 'count']
@@ -386,10 +433,168 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.write("We can see that all the countries in the top 15 destinations have a decrease in the number of flights after the terror attack on 7/10/2023, but specifically, the number of flights to Turkey decreased significantly. Every other country decrease in more than 50%, Turkey decreased in 95%.")
 
-# Map
+######### Top 15 Municipalities Destinations Before Attack #########
+# Count flights by municipality for both periods
+municipalities_before = before_attack_data['municipality'].value_counts().reset_index()
+municipalities_before.columns = ['municipality', 'count']
+municipalities_before['period'] = 'Before'
+
+municipalities_after = after_attack_data['municipality'].value_counts().reset_index()
+municipalities_after.columns = ['municipality', 'count']
+municipalities_after['period'] = 'After'
+
+# Combine data
+combined_municipalities = pd.concat([municipalities_before, municipalities_after])
+
+# Get top 15 municipalities by total flights across both periods
+top_municipalities = combined_municipalities.groupby('municipality')['count'].sum().nlargest(15).index.tolist()
+
+# Filter to only include top municipalities
+filtered_combined_municipalities = combined_municipalities[combined_municipalities['municipality'].isin(top_municipalities)]
+
+# Create a grouped bar chart
+fig = px.bar(
+    filtered_combined_municipalities,
+    x='municipality',
+    y='count',
+    color='period',
+    title="Top 15 Municipality Destinations: Before vs. After Oct 7, 2023",
+    labels={"municipality": "Municipality", "count": "Number of Flights", "period": "Period"},
+    color_discrete_sequence=["#3498db", "#e74c3c"],  # Blue and red
+    barmode='group'
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Municipality",
+    yaxis_title="Number of Flights",
+    xaxis_tickangle=45,
+    width=800,
+    height=500
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("""
+         We can see that all the municipalities in the top 15 destinations have a decrease in the number of flights after the terror attack on 7/10/2023 as we expected. Specifically, the number of flights to Istanbul decreased significantly, like we saw in the last chart with Turkey.\n
+         While every other municipality decrease in more than 50%, Istanbul decreased in more than 95%.\n
+         We can see that the municipalities match the countries from the last chart, this is because the countries are the same as the municipalities, but the municipalities are more specific and what we see is the municipalities with the most popular airports from every country.\n
+         We can see that Newark from USA is down to the 5th place instead of the 3rd place of USA in the last chart, we don't see more than one USA city because it has a lot of airports so the number of flights is spreading with all the airports.
+         """)
 
 
-# Most difference in country destinations
+######### Map of Top Municipality Destinations Before and After Attack #########
+col1, col2 = st.columns([8,1])
+
+with col2:
+    # Add a slider to control the number of municipalities shown
+    st.write("<br>", unsafe_allow_html=True)  # Add spacing
+    num_cities = st.number_input(
+        "Cities",
+        min_value=1,
+        max_value=30,
+        value=15,
+        step=1,
+        help="Adjust to show more or fewer destinations on the map"
+    )
+    # Display the current selection
+    st.write(f"Top {num_cities}")
+
+with col1:
+    # Get top municipalities by total flights across both periods (based on user selection)
+    top_municipalities = combined_municipalities.groupby('municipality')['count'].sum().nlargest(num_cities).index.tolist()
+
+    # Filter to only include top municipalities
+    filtered_combined_municipalities = combined_municipalities[combined_municipalities['municipality'].isin(top_municipalities)]
+
+    # Combine data with coordinates
+    combined_municipalities_coords = pd.merge(filtered_combined_municipalities, data[['municipality', 'latitude_deg', 'longitude_deg']].drop_duplicates(), on='municipality')
+
+    # Create a map visualization using Plotly
+    fig = px.scatter_mapbox(
+        combined_municipalities_coords,
+        lat='latitude_deg',
+        lon='longitude_deg',
+        size='count',
+        color='period',
+        hover_name='municipality',
+        hover_data={'latitude_deg': False, 'longitude_deg': False, 'count': True, 'period': True},
+        title=f"Top {num_cities} Municipality Destinations: Before vs. After Oct 7, 2023",
+        color_discrete_sequence=["#3498db", "#e74c3c"],  # Blue and red
+        mapbox_style="carto-positron",
+        zoom=1
+    )
+
+    # Update layout for better visualization
+    fig.update_layout(
+        width=800,
+        height=500,
+        margin={"r": 0, "t": 30, "l": 0, "b": 0},
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.99,
+            xanchor="right",
+            x=0.99
+        )
+    )
+
+    # Display the map in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+st.write("""
+         The map above shows the top 15 municipalities destinations before and after the terror attack on 7/10/2023. The size of the markers represents the number of flights, and the color indicates the period (before or after the attack).\n
+         We can see that most of the municipalities that decrease in the number of flights after the attack, as we saw in the previous charts, are from Europe. The size of the markers is smaller after the attack, indicating fewer flights occurred after the attack.
+         """)
+
+
+######### Most difference in municipality destinations #########
+st.write("### Top 15 Change After the Attack")
+
+# Count flights per destination before & after
+top_destinations = data.groupby(['municipality', 'period']).size().unstack().fillna(0)
+top_destinations['change'] = top_destinations['Before'] - top_destinations['After']
+top_destinations = top_destinations.sort_values(by='change', ascending=True).tail(15).reset_index()
+
+# Melt the dataframe for Plotly
+top_destinations_melted = top_destinations.melt(id_vars='municipality', value_vars=['Before', 'After'], var_name='Period', value_name='Number of Flights')
+
+# Create a horizontal bar chart using Plotly
+fig = px.bar(
+    top_destinations_melted,
+    x='Number of Flights',
+    y='municipality',
+    color='Period',
+    orientation='h',
+    title="Top 15 Destination Changes in Flights from Israel (Before vs. After Oct 7)",
+    labels={'municipality': 'City', 'Number of Flights': 'Number of Flights'},
+    color_discrete_sequence=["#3498db", "#e74c3c"]  # Blue and red
+)
+
+# Update layout for better visualization
+fig.update_layout(
+    xaxis_title="Number of Flights",
+    yaxis_title="City",
+    barmode='group',
+    width=800,
+    height=600,
+    margin={"r": 0, "t": 30, "l": 0, "b": 0},
+    xaxis=dict(
+        showgrid=True,
+        gridcolor='rgba(128, 128, 128, 0.15)',
+        gridwidth=1,
+        ),
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("""
+         The chart above shows the top 15 destination changes in flights from Israel before and after the terror attack on 7/10/2023. The number of flights to each destination is shown for both periods, with the color indicating the period (before or after the attack).\n
+         The chart shows the cities with the most significant changes in the number of flights after the attack with calculating difference between the number of flights before and after the attack, sort by the difference and get the top 15 with the largest changes.\n
+         We can see that except for the city of Istanbul, there is a big decrease in more than 95% in the number of flights in more cities, like San Francisco and Washington. The other cities have a decrease of 50-70% like we saw in the previous charts.
+         """)
 
 
 st.write("---")
