@@ -8,7 +8,7 @@ def get_data():
     This function will only be re-run when the data is changed.
     Read
     """
-    data = pd.read_csv("/workspaces/Flights_Data_Analysis/data/data.csv")
+    data = pd.read_csv("data/data.csv")
     # Drop the 'departure_time_day_of_week' column
     data = data.drop(columns=['departure_time_day_of_week'])
     data['departure_time'] = pd.to_datetime(data['departure_time'])
@@ -19,7 +19,7 @@ def get_columns_desc():
     """
     Read the Terror Attacks data from the CSV file.
     """
-    df = pd.read_csv("/workspaces/Flights_Data_Analysis/data/column_desc.csv", encoding='ISO-8859-1')
+    df = pd.read_csv("data/column_desc.csv", encoding='ISO-8859-1')
     return df
 
 
