@@ -1,4 +1,4 @@
 [[pages]]
 path = "app_pages/homePage.py"
-name = "Flight Data Analysis"
-icon = "🏠"
+name = "Flights Data Analysis"
+icon = "✈️"

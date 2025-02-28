@@ -22,19 +22,21 @@ def get_columns_desc():
     df = pd.read_csv("data/column_desc.csv", encoding='ISO-8859-1')
     return df
 
-
-st.title("✈️ Flight Data Analysis")
+st.title("✈️ Flights Data Analysis")
 st.write(
     """
-    This is my project about flights from Israel to the world. The flights is from October 2022 to October 2024.\n
+    This is my project about flights from Israel to the world. The flights is from October 2022 to October 2024 and this is only flights from Israel to other destinations.\n
     On October 7, 2023, a terror attack in Israel led to the cancellation of all flights, significantly impacting air travel in the region. This project will explore these effects.\n
+    The destinations are the local destinations to which the current flight flew. If there was a connection, then the destination is not the final destination but the destination of the first connection. We will try to make the best of this data and see what happened in the world of flights in Israel in the year after October 7th compared to the year before, and in general we will look at the world of flights from Israel.\n
     The data, sourced from https://opensky-network.org/ via API requests, has been pre-processed by me, with all relevant code available in the repository.\n
-    Both the data and the code can be found in the repository.
+    Both the data and the code can be found in the [repository](https://github.com/Yarin-Shohat/Flights_Data_Analysis).
     """
 )
 
 st.write("For the preprocessing step, you can click [here](https://github.com/Yarin-Shohat/Flights_Data_Analysis/tree/main/1-flight_data_preprocessing)")
 st.write("For the first data analysis step, you can click [here](https://github.com/Yarin-Shohat/Flights_Data_Analysis/tree/main/2-flight_data_analysis)")
+
+st.write("Made by Yarin Shohat, can be contacted via [LinkedIn](https://www.linkedin.com/in/yarinsh/) or check out my [GitHub profile](https://github.com/Yarin-Shohat)")
 
 st.write("---")
 
@@ -90,6 +92,8 @@ for column in data.columns:
     })
 
 summary_df = pd.DataFrame(summary_data)
+# Reset the index to start from 1
+summary_df.index = range(1, len(summary_df) + 1)
 st.dataframe(
     summary_df.style.background_gradient(
         subset=['Unique Values'], 
@@ -191,11 +195,18 @@ fig = px.bar(
 fig.update_layout(
     xaxis_title="",
     yaxis_title="Number of Flights",
-    xaxis_tickangle=0
+    xaxis_tickangle=0,
+    legend=dict(
+    orientation="v",
+    yanchor="top",
+    y=0.99,
+    xanchor="right",
+    x=0.99
+)
 )
 
 # Display the chart in Streamlit
-fig.update_layout(width=600)  # Set a specific width in pixels
+fig.update_layout(width=500)
 st.plotly_chart(fig, use_container_width=False)
 
 st.write("The chart above shows the number of flights before and after the terror attack on 7/10/2023. As expected, there is a significant drop in the number of flights after the attack.")
@@ -354,7 +365,7 @@ with col2:
         y='Number of Flights',
         color='Period',
         barmode='group',
-        title="Flight Changes by Continent (Before vs. After Oct 7)",
+        title="Flights Changes by Continent (Before vs. After Oct 7)",
         labels={'continent': 'Continent', 'Number of Flights': 'Number of Flights'},
         color_discrete_sequence=["#3498db", "#e74c3c"],  # Blue and red
         log_y=log_scale  # Apply log scale based on checkbox
@@ -366,7 +377,14 @@ with col2:
         yaxis_title=f"Number of Flights{' (Log Scale)' if log_scale else ''}",
         xaxis_tickangle=45,
         width=800,
-        height=400
+        height=400,
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.99,
+            xanchor="right",
+            x=0.99
+        )
     )
 
     # Display the chart in Streamlit
@@ -425,7 +443,14 @@ fig.update_layout(
     yaxis_title="Number of Flights",
     xaxis_tickangle=45,
     width=800,
-    height=500
+    height=500,
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99
+    )
 )
 
 # Display the chart in Streamlit
@@ -470,7 +495,14 @@ fig.update_layout(
     yaxis_title="Number of Flights",
     xaxis_tickangle=45,
     width=800,
-    height=500
+    height=500,
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99
+    )
 )
 
 # Display the chart in Streamlit
@@ -596,6 +628,9 @@ st.write("""
          We can see that except for the city of Istanbul, there is a big decrease in more than 95% in the number of flights in more cities, like San Francisco and Washington. The other cities have a decrease of 50-70% like we saw in the previous charts.
          """)
 
-
 st.write("---")
-st.write(data)
+
+st.write("""
+    Thanks to everyone who made it untill this point. If you have any notes, suggestions for improvement, or anything else, you can contact me via [LinkedIn](https://www.linkedin.com/in/yarinsh/) or check out my [GitHub profile](https://github.com/Yarin-Shohat).
+     """)
+
