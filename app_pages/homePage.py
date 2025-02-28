@@ -55,6 +55,9 @@ with col3:
 summary_data = []
 for column in data.columns:
     col_type = data[column].dtype
+    # Make sure time without statistics
+    if column == "departure_time":
+        col_type = "object"
     unique_count = data[column].nunique()
     missing_count = data[column].isna().sum()
     missing_percentage = (missing_count / len(data)) * 100
@@ -70,6 +73,9 @@ for column in data.columns:
     except:
         min_val = max_val = mean_val = "N/A"
     
+    # Change time to time date
+    if column == "departure_time" or column == "arrival_time":
+        col_type = "datetime64"
     summary_data.append({
         "Column": columns_decs[columns_decs.iloc[:, 0] == column].iloc[:, 2].values[0],
         "Type": str(col_type),
